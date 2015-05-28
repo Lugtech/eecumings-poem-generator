@@ -66,7 +66,7 @@
       var reserve = Reservoir(6 + 8 * Math.random() + 8 * Math.random());
 
       for (var i = 0; i < responses.length; i++) {
-        var regex = /[^]+?\./g;
+        var regex = /[^]+?[\.\?\!]/g;
         var result;
         while (result = regex.exec(responses[i])) {
           var sentence = result[0];
