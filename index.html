@@ -112,7 +112,7 @@
         if (words.length < 3 || Math.random() < 0.25)
           shuffle(words);
         else {
-          var s = 2 + 0|(Math.random() * (words.length - 2));
+          var s = 2 + 0|(Math.random() * Math.random() * (words.length - 2));
 
           var a = words.slice(0, s);
           var b = words.slice(s, words.length);
