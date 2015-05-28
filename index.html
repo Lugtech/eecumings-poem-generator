@@ -63,7 +63,7 @@
     function processSeeds() {
       console.log('processing seeds');
 
-      var reserve = Reservoir(6 + 10 * Math.random());
+      var reserve = Reservoir(6 + 10 * Math.random() + 10 * Math.random());
 
       for (var i = 0; i < responses.length; i++) {
         var regex = /[^]+?\./g;
