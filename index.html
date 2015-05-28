@@ -12,8 +12,157 @@
   <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
   <![endif]-->
 </head>
-
 <body>
-  <p id="text">Poem goes here</p>
+  <div style="float: left; position: relative; left: 50%">
+    <div style="float: left; position: relative; left: -50%">
+      <p id="text" style="text-align: left"></p>
+    </div>
+  </div>
+  <script type="text/javascript" src="reservoir.js"></script>
+  <script type="text/javascript">
+
+    function shuffle(array) {
+      for (var i = array.length - 1; i > 0; i--) {
+        var j = 0|(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+      }
+    }
+
+
+    var seeds = [
+      'bronte-janeeyre.txt',
+      'thoreau-walden.txt',
+      'hawthorne-thescarletletter.txt'
+    ];
+    var responses = [];
+
+    for (var i = 0; i < seeds.length; i++) {
+      (function(url) {
+        var xhr;
+        if (window.XMLHttpRequest)
+          xhr = new XMLHttpRequest();
+        else
+          xhr = new ActiveXObject("Microsoft.XMLHTTP");
+
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4 && xhr.status === 200) {
+            console.log(xhr.response.split(/[\r\n]+/, 1)[0]);
+            responses.push(xhr.response);
+            if (responses.length === seeds.length)
+              processSeeds();
+          }
+        }
+        xhr.overrideMimeType('text/plain');
+        xhr.open('GET', url, true);
+        xhr.send(null);
+      })('seeds/' + seeds[i]);
+    }
+
+    function processSeeds() {
+      console.log('processing seeds');
+
+      var reserve = Reservoir(6 + 10 * Math.random());
+
+      for (var i = 0; i < responses.length; i++) {
+        var regex = /[^]+?\./g;
+        var result;
+        while (result = regex.exec(responses[i])) {
+          var sentence = result[0];
+          sentence = sentence.replace(/[\r\n]/g, " ");
+          sentence = sentence.replace(/[_\""]/g, "");
+          sentence = sentence.toLowerCase();
+          reserve.pushSome(sentence);
+        }
+      }
+
+      console.log('picked ' + reserve.length + ' lines');
+      shuffle(reserve);
+
+      var processedReserve = [];
+
+      //sentences chosen:
+      for (var j = 0; j < reserve.length; j++) {
+        var sentence = reserve[j];
+        var words = sentence.split(/\s+/);
+
+        //console.log("words: [" + words.join(", ") + "]");
+
+        var i = 0;
+        while (i < words.length) {
+          if (words[i].length === 1) {
+            if (Math.random() < 0.2)
+              words.splice(i, 1);
+            else if (Math.random() < 0.05) {
+              words[i] += 'n';
+              i++;
+            }
+            continue;
+          }
+          if (words[i].length / 10 < Math.random() + Math.random()) {
+            words.splice(i, 1);
+            continue;
+          }
+          i++;
+        }
+
+        var length = 0|(5 + Math.random() * 5);
+        if (words.length < 3 || Math.random() < 0.25)
+          shuffle(words);
+        else {
+          var s = 2 + 0|(Math.random() * (words.length - 2));
+
+          var a = words.slice(0, s);
+          var b = words.slice(s, words.length);
+
+          if (Math.random() < 0.3)
+            shuffle(a);
+          if (Math.random() < 0.3)
+            shuffle(b);
+
+          words.length = 0; //clear the array
+          if (Math.random() < 0.6) {
+            words.push.apply(words, a);
+            words.push.apply(words, b);
+          }
+          else {
+            words.push.apply(words, b);
+            words.push.apply(words, a);
+          }
+        }
+
+
+        for (var i = 0; i < words.length; i++) {
+          if (words[i].length < 2)
+            continue;
+          if (words[i].length / 20 < Math.random() * Math.random()) {
+            words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1);
+            i += 0|(5 * Math.random());
+          }
+        }
+
+        for (var i = 0; i < words.length; i++) {
+          if (words[i].length / 10 > Math.random() + Math.random() + Math.random()) {
+            var s = 1 + 0|(Math.random() * (words[i].length - 1));
+            var word = words[i];
+            words[i] = word.substring(0, s) + '<br>';
+            words.splice(i + 1, 0, word.substring(s));
+
+            length += 0|(4 + Math.random() * 5);
+            i++; //increment extra due to new word
+          }
+        }
+
+        //crop
+        words = words.slice(0, Math.min(length, words.length));
+
+        processedReserve.push(words.join(' '));
+      }
+
+      document.getElementById('text').innerHTML = processedReserve.join('<br>');
+    }
+
+  </script>
 </body>
 </html>
