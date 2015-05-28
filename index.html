@@ -133,12 +133,18 @@
           }
         }
         
+        
+        //boring short letters
         var m = 1;
         while (m < words.length) {
-          if (words[m] === 'i' && words[m - 1] === 'i')
-            words.splice(m, 1);
-          else
-            m++;
+          if ((words[m] === 'i' && words[m - 1] === 'i') || (words[m] === 'a' && words[m - 1] === 'a')) {
+            if (Math.random() < 0.6) {
+              words.splice(m, 1);
+              continue;
+            }
+            words[m] += 'n';
+          }
+          m++;
         }
 
 
