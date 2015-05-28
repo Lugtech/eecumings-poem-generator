@@ -142,7 +142,7 @@
           }
         }
 
-        for (var i = 0; i < words.length; i++) {
+        for (var i = 1; i < words.length - 1; i++) {
           if (words[i].length / 10 > Math.random() + Math.random() + Math.random()) {
             var s = 1 + 0|(Math.random() * (words[i].length - 1));
             var word = words[i];
