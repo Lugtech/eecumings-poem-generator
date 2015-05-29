@@ -85,9 +85,7 @@
 
 				var k = 0;
 				while (k < words.length) {
-					if (words[k].length === 1)
-						continue;
-					if (words[k].length / 10 < Math.random() + Math.random()) {
+					if (words[k].length !== 1 && words[k].length / 10 < Math.random() + Math.random()) {
 						words.splice(k, 1);
 						continue;
 					}
