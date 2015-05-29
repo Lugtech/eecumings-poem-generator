@@ -2,182 +2,180 @@
 
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+<meta charset="utf-8">
 
-  <title>eecummings poem generator</title>
-  <meta name="description" content="eecumming poem generator">
-  <meta name="author" content="Mingwei Samuel">
+<title>eecummings poem generator</title>
+<meta name="description" content="eecumming poem generator">
+<meta name="author" content="Mingwei Samuel">
 
-  <!--[if lt IE 9]>
+<!--[if lt IE 9]>
   <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
   <![endif]-->
 </head>
 <body>
-  <div style="float: left; position: relative; left: 50%">
-    <div style="float: left; position: relative; left: -50%">
-      <p id="text" style="text-align: left"></p>
-    </div>
-  </div>
-  <script type="text/javascript" src="reservoir.js"></script>
-  <script type="text/javascript">
+	<div style="float: left; position: relative; left: 50%">
+		<div style="float: left; position: relative; left: -50%">
+			<p id="text" style="text-align: left"></p>
+		</div>
+	</div>
+	<script type="text/javascript" src="reservoir.js"></script>
+	<script type="text/javascript">
+		function shuffle(array) {
+			for (var i = array.length - 1; i > 0; i--) {
+				var j = 0 | (Math.random() * (i + 1));
+				var temp = array[i];
+				array[i] = array[j];
+				array[j] = temp;
+			}
+		}
 
-    function shuffle(array) {
-      for (var i = array.length - 1; i > 0; i--) {
-        var j = 0|(Math.random() * (i + 1));
-        var temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-      }
-    }
+		var seeds = [ 'bronte-janeeyre.txt', 'thoreau-walden.txt', 'hawthorne-thescarletletter.txt' ];
+		var responses = [];
 
+		for (var i = 0; i < seeds.length; i++) {
+			(function(url) {
+				var xhr;
+				if (window.XMLHttpRequest)
+					xhr = new XMLHttpRequest();
+				else
+					xhr = new ActiveXObject("Microsoft.XMLHTTP");
 
-    var seeds = [
-      'bronte-janeeyre.txt',
-      'thoreau-walden.txt',
-      'hawthorne-thescarletletter.txt'
-    ];
-    var responses = [];
+				xhr.onreadystatechange = function() {
+					if (xhr.readyState === 4 && xhr.status === 200) {
+						console.log(xhr.response.split(/[\r\n]+/, 1)[0]);
+						responses.push(xhr.response);
+						if (responses.length === seeds.length)
+							processSeeds();
+					}
+				}
+				xhr.overrideMimeType('text/plain');
+				xhr.open('GET', url, true);
+				xhr.send(null);
+			})('seeds/' + seeds[i]);
+		}
 
-    for (var i = 0; i < seeds.length; i++) {
-      (function(url) {
-        var xhr;
-        if (window.XMLHttpRequest)
-          xhr = new XMLHttpRequest();
-        else
-          xhr = new ActiveXObject("Microsoft.XMLHTTP");
+		function processSeeds() {
+			console.log('processing seeds');
 
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4 && xhr.status === 200) {
-            console.log(xhr.response.split(/[\r\n]+/, 1)[0]);
-            responses.push(xhr.response);
-            if (responses.length === seeds.length)
-              processSeeds();
-          }
-        }
-        xhr.overrideMimeType('text/plain');
-        xhr.open('GET', url, true);
-        xhr.send(null);
-      })('seeds/' + seeds[i]);
-    }
+			var reserve = Reservoir(6 + 8 * Math.random() + 8 * Math.random());
 
-    function processSeeds() {
-      console.log('processing seeds');
+			for (var i = 0; i < responses.length; i++) {
+				var regex = /[^]+?[\.\?\!]/g;
+				var result;
+				while (result = regex.exec(responses[i])) {
+					var sentence = result[0];
+					sentence = sentence.replace(/[\r\n]/g, " ");
+					sentence = sentence.replace(/[_\""]/g, "");
+					sentence = sentence.toLowerCase();
+					reserve.pushSome(sentence);
+				}
+			}
 
-      var reserve = Reservoir(6 + 8 * Math.random() + 8 * Math.random());
+			console.log('picked ' + reserve.length + ' lines');
+			shuffle(reserve);
 
-      for (var i = 0; i < responses.length; i++) {
-        var regex = /[^]+?[\.\?\!]/g;
-        var result;
-        while (result = regex.exec(responses[i])) {
-          var sentence = result[0];
-          sentence = sentence.replace(/[\r\n]/g, " ");
-          sentence = sentence.replace(/[_\""]/g, "");
-          sentence = sentence.toLowerCase();
-          reserve.pushSome(sentence);
-        }
-      }
+			var processedReserve = [];
 
-      console.log('picked ' + reserve.length + ' lines');
-      shuffle(reserve);
+			//sentences chosen:
+			for (var j = 0; j < reserve.length; j++) {
+				var sentence = reserve[j];
+				var words = sentence.split(/\s+/);
 
-      var processedReserve = [];
+				//console.log("words: [" + words.join(", ") + "]");
 
-      //sentences chosen:
-      for (var j = 0; j < reserve.length; j++) {
-        var sentence = reserve[j];
-        var words = sentence.split(/\s+/);
+				var k = 0;
+				while (k < words.length) {
+					if (words[k].length === 1) {
+						if (Math.random() < 0.3)
+							words.splice(k, 1);
+						else {
+							if (Math.random() < 0.05)
+								words[k] += 'n';
+							k++;
+						}
+						continue;
+					}
+					if (words[k].length / 10 < Math.random() + Math.random()) {
+						words.splice(k, 1);
+						continue;
+					}
+					k++;
+				}
 
-        //console.log("words: [" + words.join(", ") + "]");
+				var length = 0 | (5 + Math.random() * 5);
+				if (words.length < 3 || Math.random() < 0.25)
+					shuffle(words);
+				else {
+					var s = 2 + 0 | (Math.random() * Math.random() * (words.length - 2));
 
-        var k = 0;
-        while (k < words.length) {
-          if (words[k].length === 1) {
-            if (Math.random() < 0.3)
-              words.splice(k, 1);
-            else {
-              if (Math.random() < 0.05)
-                words[k] += 'n';
-              k++;
-            }
-            continue;
-          }
-          if (words[k].length / 10 < Math.random() + Math.random()) {
-            words.splice(k, 1);
-            continue;
-          }
-          k++;
-        }
+					var a = words.slice(0, s);
+					var b = words.slice(s, words.length);
 
-        var length = 0|(5 + Math.random() * 5);
-        if (words.length < 3 || Math.random() < 0.25)
-          shuffle(words);
-        else {
-          var s = 2 + 0|(Math.random() * Math.random() * (words.length - 2));
+					if (Math.random() < 0.3)
+						shuffle(a);
+					if (Math.random() < 0.3)
+						shuffle(b);
 
-          var a = words.slice(0, s);
-          var b = words.slice(s, words.length);
+					words.length = 0; //clear the array
+					if (Math.random() < 0.6) {
+						words.push.apply(words, a);
+						words.push.apply(words, b);
+					}
+					else {
+						words.push.apply(words, b);
+						words.push.apply(words, a);
+					}
+				}
 
-          if (Math.random() < 0.3)
-            shuffle(a);
-          if (Math.random() < 0.3)
-            shuffle(b);
+				for (var i = 0; i < words.length; i++) {
+					if (words[i].length < 2)
+						continue;
+					if (words[i].length / 20 < Math.random() * Math.random()) {
+						words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1);
+						i += 0 | (5 * Math.random());
+					}
+				}
 
-          words.length = 0; //clear the array
-          if (Math.random() < 0.6) {
-            words.push.apply(words, a);
-            words.push.apply(words, b);
-          }
-          else {
-            words.push.apply(words, b);
-            words.push.apply(words, a);
-          }
-        }
-        
-        
-        //boring short letters
-        var m = 1;
-        while (m < words.length) {
-          if ((words[m - 1] === 'i' || words[m - 1] === 'a') && (words[m] === 'i' && words[m] === 'a')) {
-            if (Math.random() < 0.6) {
-              words.splice(m, 1);
-              continue;
-            }
-            words[m] += 'n';
-          }
-          m++;
-        }
+				for (var i = 1; i < words.length - 1; i++) {
+					if (words[i].length / 18 > Math.random() + Math.random() + Math.random()) {
+						var s = 1 + 0 | (Math.random() * (words[i].length - 1));
+						var word = words[i];
+						words[i] = word.substring(0, s) + '<br>';
+						words.splice(i + 1, 0, word.substring(s));
 
+						length += 0 | (4 + Math.random() * 5);
+						i++; //increment extra due to new word
+					}
+				}
 
-        for (var i = 0; i < words.length; i++) {
-          if (words[i].length < 2)
-            continue;
-          if (words[i].length / 20 < Math.random() * Math.random()) {
-            words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1);
-            i += 0|(5 * Math.random());
-          }
-        }
+				// deal with boring short letters
+				var m = 1;
+				while (m < words.length) {
+					if ((words[m - 1] === 'i' || words[m - 1] === 'a') && (words[m] === 'i' || words[m] === 'a')) {
+						if (Math.random() < 0.6) {
+							words.splice(m, 1);
+							continue;
+						}
+						if (words[m] === 'a' && Math.random() < 0.65)
+							words[m] += 'm';
+						else
+							words[m] += 'n';
+					}
+					m++;
+				}
 
-        for (var i = 1; i < words.length - 1; i++) {
-          if (words[i].length / 18 > Math.random() + Math.random() + Math.random()) {
-            var s = 1 + 0|(Math.random() * (words[i].length - 1));
-            var word = words[i];
-            words[i] = word.substring(0, s) + '<br>';
-            words.splice(i + 1, 0, word.substring(s));
+				//crop
+				(window.words = window.words || [])[j] = words;
 
-            length += 0|(4 + Math.random() * 5);
-            i++; //increment extra due to new word
-          }
-        }
+				words = words.slice(0, Math.min(length, words.length));
 
-        //crop
-        words = words.slice(0, Math.min(length, words.length));
+				processedReserve.push(words.join(' '));
+			}
 
-        processedReserve.push(words.join(' '));
-      }
+			document.getElementById('text').innerHTML = processedReserve.join('<br>');
 
-      document.getElementById('text').innerHTML = processedReserve.join('<br>');
-    }
-
-  </script>
+			window.processedReserve = processedReserve;
+		}
+	</script>
 </body>
 </html>
